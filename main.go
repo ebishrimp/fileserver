@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -8,6 +9,7 @@ import (
 func main() {
 	/*http.HandleFunc("/push", pushHandler)*/
 	http.HandleFunc("/test", testHandler)
+	fmt.Println("Server is running on port 50080...")
 	http.ListenAndServe(":50080", nil)
 }
 
