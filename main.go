@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var filename string
