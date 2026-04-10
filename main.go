@@ -20,6 +20,7 @@ func main() {
 
 	fmt.Println("Connecting to the database...")
 	dbConnect()
+	defer db.Close()
 
 	fmt.Println("Server is running on port 50080...")
 	http.ListenAndServe(":50080", nil)
@@ -44,18 +45,18 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func dbConnect() {
-	db, err := sql.Open("mysql", "fileserver:fileserver@tcp(localhost:3306)/fileserver")
+	data, err := sql.Open("mysql", "fileserver:fileserver@tcp(localhost:3306)/fileserver")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
 
-	err = db.Ping()
+	err = data.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println("Successfully connected to the database")
+	db = data
 }
 
 func pushHandler(w http.ResponseWriter, r *http.Request) {
