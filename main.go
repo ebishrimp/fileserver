@@ -59,22 +59,20 @@ func dbConnect() {
 }
 
 func pushHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		recieveUrl, _ := url.Parse(r.URL.String())
+	recieveUrl, _ := url.Parse(r.URL.String())
 
-		param, _ := url.ParseQuery(recieveUrl.RawQuery)
+	param, _ := url.ParseQuery(recieveUrl.RawQuery)
 
-		name := param.Get("name")
-		hard := param.Get("hard")
-		app := param.Get("app")
+	name := param.Get("name")
+	hard := param.Get("hard")
+	app := param.Get("app")
 
-		if name == "" || hard == "" || app == "" {
-			w.Write([]byte("Missing parameters"))
-			return
-		}
-
-		pushOperation(db, name, hard, app, w)
+	if name == "" || hard == "" || app == "" {
+		w.Write([]byte("Missing parameters"))
+		return
 	}
+
+	pushOperation(db, name, hard, app, w)
 
 }
 
