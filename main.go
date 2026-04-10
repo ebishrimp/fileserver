@@ -91,7 +91,7 @@ func pushOperation(db *sql.DB, name string, hard string, app string, w http.Resp
 			log.Fatal(err)
 		}
 		newID := id + 1
-		_, err = db.Exec("INSERT INTO filepath (id, filename, hardlayer, applayer) VALUES (?, ?, ?, ?)", newID, name, hard, app)
+		_, err = db.Exec("INSERT INTO filepath (id, filename, hardlayer, applayer, path) VALUES (?, ?, ?, ?, ?)", newID, name, hard, app, "/"+hard+"/"+app+"/"+name)
 		if err != nil {
 			log.Fatal(err)
 		}
