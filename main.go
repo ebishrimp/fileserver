@@ -14,9 +14,11 @@ var db *sql.DB
 
 func main() {
 	http.HandleFunc("/test", testHandler)
+
 	http.HandleFunc("/push", pushHandler)
 	http.HandleFunc("/pull", pullHandler)
 	http.HandleFunc("/overwrite", overWriteHandler)
+	http.HandleFunc("/delete", deleteHandler)
 
 	fmt.Println("Connecting to the database...")
 	dbConnect()
@@ -143,4 +145,43 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 
 func overWriteOperation(db *sql.DB, name string, hard string, app string) {
 
+}
+
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	recieveUrl, _ := url.Parse(r.URL.String())
+
+	param, _ := url.ParseQuery(recieveUrl.RawQuery)
+
+	name := param.Get("name")
+	hard := param.Get("hard")
+	app := param.Get("app")
+
+	if name == "" || hard == "" || app == "" {
+		w.Write([]byte("Missing parameters"))
+		return
+	}
+	deleteOperation(db, name, hard, app, w)
+}
+
+func deleteOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
+	selectID, err := db.Query("SELECT id FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer selectID.Close()
+
+	if selectID.Next() {
+		var id int
+		err := selectID.Scan(&id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = db.Exec("DELETE FROM filepath WHERE id = ?", id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Fprintf(w, "File information with ID: %d deleted successfully", id)
+	} else {
+		fmt.Fprintf(w, "No file information found for the given parameters")
+	}
 }
