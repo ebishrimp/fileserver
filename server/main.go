@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -30,13 +29,10 @@ func main() {
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" || r.Method == "POST" {
-		recieveUrl, _ := url.Parse(r.URL.String())
 
-		param, _ := url.ParseQuery(recieveUrl.RawQuery)
-
-		name := param.Get("name")
-		hard := param.Get("hard")
-		app := param.Get("app")
+		name := r.URL.Query().Get("name")
+		hard := r.URL.Query().Get("hard")
+		app := r.URL.Query().Get("app")
 
 		if name == "" || hard == "" || app == "" {
 			w.Write([]byte("Missing parameters"))
@@ -62,13 +58,9 @@ func dbConnect() {
 }
 
 func pushHandler(w http.ResponseWriter, r *http.Request) {
-	recieveUrl, _ := url.Parse(r.URL.String())
-
-	param, _ := url.ParseQuery(recieveUrl.RawQuery)
-
-	name := param.Get("name")
-	hard := param.Get("hard")
-	app := param.Get("app")
+	name := r.URL.Query().Get("name")
+	hard := r.URL.Query().Get("hard")
+	app := r.URL.Query().Get("app")
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
@@ -102,22 +94,16 @@ func pushOperation(db *sql.DB, name string, hard string, app string, w http.Resp
 }
 
 func pullHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		recieveUrl, _ := url.Parse(r.URL.String())
+	name := r.URL.Query().Get("name")
+	hard := r.URL.Query().Get("hard")
+	app := r.URL.Query().Get("app")
 
-		param, _ := url.ParseQuery(recieveUrl.RawQuery)
-
-		name := param.Get("name")
-		hard := param.Get("hard")
-		app := param.Get("app")
-
-		if name == "" || hard == "" || app == "" {
-			w.Write([]byte("Missing parameters"))
-			return
-		}
-
-		pullOperation(db, name, hard, app)
+	if name == "" || hard == "" || app == "" {
+		w.Write([]byte("Missing parameters"))
+		return
 	}
+
+	pullOperation(db, name, hard, app)
 }
 
 func pullOperation(db *sql.DB, name string, hard string, app string) {
@@ -125,22 +111,16 @@ func pullOperation(db *sql.DB, name string, hard string, app string) {
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		recieveUrl, _ := url.Parse(r.URL.String())
+	name := r.URL.Query().Get("name")
+	hard := r.URL.Query().Get("hard")
+	app := r.URL.Query().Get("app")
 
-		param, _ := url.ParseQuery(recieveUrl.RawQuery)
-
-		name := param.Get("name")
-		hard := param.Get("hard")
-		app := param.Get("app")
-
-		if name == "" || hard == "" || app == "" {
-			w.Write([]byte("Missing parameters"))
-			return
-		}
-
-		overWriteOperation(db, name, hard, app)
+	if name == "" || hard == "" || app == "" {
+		w.Write([]byte("Missing parameters"))
+		return
 	}
+
+	overWriteOperation(db, name, hard, app)
 }
 
 func overWriteOperation(db *sql.DB, name string, hard string, app string) {
@@ -148,13 +128,9 @@ func overWriteOperation(db *sql.DB, name string, hard string, app string) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
-	recieveUrl, _ := url.Parse(r.URL.String())
-
-	param, _ := url.ParseQuery(recieveUrl.RawQuery)
-
-	name := param.Get("name")
-	hard := param.Get("hard")
-	app := param.Get("app")
+	name := r.URL.Query().Get("name")
+	hard := r.URL.Query().Get("hard")
+	app := r.URL.Query().Get("app")
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
