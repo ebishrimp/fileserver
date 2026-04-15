@@ -68,30 +68,31 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pushOperation(db, name, hard, app, w)
-
 }
 
-func pushOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
-	latestID, err := db.Query("SELECT max(id) FROM filepath")
+// Check if a record exists
+
+/*latestID, err := db.Query("SELECT max(id) FROM filepath")
+if err != nil {
+	log.Fatal(err)
+}
+defer latestID.Close()
+
+if latestID.Next() {
+	var id int
+	err := latestID.Scan(&id)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, "Error scanning ID", http.StatusInternalServerError)
+		return
 	}
-	defer latestID.Close()
-
-	if latestID.Next() {
-		var id int
-		err := latestID.Scan(&id)
-		if err != nil {
-			log.Fatal(err)
-		}
-		newID := id + 1
-		_, err = db.Exec("INSERT INTO filepath (id, filename, hardlayer, applayer, path) VALUES (?, ?, ?, ?, ?)", newID, name, hard, app, "/"+hard+"/"+app+"/"+name)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintf(w, "File information inserted successfully with ID: %d", newID)
+	newID := id + 1
+	_, err = db.Exec("INSERT INTO filepath (id, filename, hardlayer, applayer, path) VALUES (?, ?, ?, ?, ?)", newID, name, hard, app, "/"+hard+"/"+app+"/"+name)
+	if err != nil {
+		http.Error(w, "Error inserting file information", http.StatusInternalServerError)
+		return
 	}
-}
+	fmt.Fprintf(w, "File information inserted successfully with ID: %d", newID)
+}*/
 
 func pullHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
@@ -142,7 +143,8 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 func deleteOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
 	selectID, err := db.Query("SELECT id FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, "Error selecting file information", http.StatusInternalServerError)
+		return
 	}
 	defer selectID.Close()
 
@@ -150,14 +152,16 @@ func deleteOperation(db *sql.DB, name string, hard string, app string, w http.Re
 		var id int
 		err := selectID.Scan(&id)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, "Error scanning ID", http.StatusInternalServerError)
+			return
 		}
 		_, err = db.Exec("DELETE FROM filepath WHERE id = ?", id)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, "Error deleting file information", http.StatusInternalServerError)
+			return
 		}
 		fmt.Fprintf(w, "File information with ID: %d deleted successfully", id)
 	} else {
-		fmt.Fprintf(w, "No file information found for the given parameters")
+		http.Error(w, "No file information found for the given parameters", http.StatusNotFound)
 	}
 }
