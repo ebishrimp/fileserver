@@ -104,11 +104,47 @@ func pullHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pullOperation(db, name, hard, app)
+	rows, err := db.Query("SELECT path FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
+	if err != nil {
+		http.Error(w, "Error querying file information", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var path string
+		err := rows.Scan(&path)
+		if err != nil {
+			http.Error(w, "Error scanning path", http.StatusInternalServerError)
+			return
+		}
+		if path == "" {
+			http.Error(w, "No file information found for the given parameters", http.StatusNotFound)
+			return
+		}
+	}
+	pullOperation(db, name, hard, app, w)
 }
 
-func pullOperation(db *sql.DB, name string, hard string, app string) {
+func pullOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
+	pathRow, err := db.Query("SELECT path FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
+	if err != nil {
+		http.Error(w, "Error querying file information", http.StatusInternalServerError)
+		return
+	}
+	defer pathRow.Close()
 
+	if pathRow.Next() {
+		var path string
+		err := pathRow.Scan(&path)
+		if err != nil {
+			http.Error(w, "Error scanning path", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "File path: %s", path)
+	} else {
+		http.Error(w, "No file information found for the given parameters", http.StatusNotFound)
+	}
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
