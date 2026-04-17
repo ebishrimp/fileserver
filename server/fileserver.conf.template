@@ -1,0 +1,10 @@
+allowPush true / false
+allowPull true / false
+allowOverwrite true / false
+allowDelete true / false
+
+whiteList true / false
+
+#default data directory is /home/user/data
+raid0 true / false
+raidpath /path/to/dir

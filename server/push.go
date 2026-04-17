@@ -61,7 +61,7 @@ func pushOperation(db *sql.DB, name string, hard string, app string, w http.Resp
 		return
 	}
 	userEnv := env.Username
-	var dirpath string = filepath.Join("/", "home", userEnv, hard, app)
+	var dirpath string = filepath.Join("/", "home", userEnv, "data", hard, app)
 	pushDirOp(dirpath, w)
 	//make directory before pushing file
 }
