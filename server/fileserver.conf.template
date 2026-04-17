@@ -8,3 +8,8 @@ whiteList true / false
 #default data directory is /home/user/data
 raid0 true / false
 raidpath /path/to/dir
+
+mysqlUsername username
+mysqlPassword password
+
+ListenPort 50080
