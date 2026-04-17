@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
+	"os/user"
+	"path/filepath"
 )
 
 func pushOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
@@ -51,4 +54,22 @@ func pushOperation(db *sql.DB, name string, hard string, app string, w http.Resp
 		}
 		fmt.Fprintf(w, "ID: %d", id)
 	}
+
+	env, err := user.Current()
+	if err != nil {
+		http.Error(w, "Error getting host user information", http.StatusInternalServerError)
+		return
+	}
+	userEnv := env.Username
+	var dirpath string = filepath.Join("/", "home", userEnv, hard, app)
+	pushDirOp(dirpath, w)
+	//make directory before pushing file
+}
+
+func pushDirOp(dirpath string, w http.ResponseWriter) {
+	if err := os.MkdirAll(dirpath, os.ModePerm); err != nil {
+		http.Error(w, "Error creating directory", http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Directory created successfully at %s", dirpath)
 }

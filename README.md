@@ -4,6 +4,7 @@
 - crient 側からのファイル操作リクエスト
 - 各言語対応のライブラリおよびシェル用コマンド
 - LAN内運用を想定
+- 疑似 raid 0 対応
 
 # 仕様
 ### 管理
@@ -12,6 +13,7 @@
 - MySQL 側の初期設定およびユーザー管理が必須
 - インジェクション対策
 - 送信前にtarアーカイブ化を実行
+- 疑似 raid 0 有効の場合push/overwriteにより2つのマウントポイント(ディレクトリ)に書き込む
 ### リクエスト
 - http://host:port/push?params=values によりファイルアップロード(上書き禁止)
 - http://host:port/pull?params=values によりファイルダウンロード
@@ -21,6 +23,6 @@
 
 to do<br>
 ・ディレクトリ操作<br>
-・openAPIによるclient側の整備基盤作成(openapi.yml)
-・ファイル送受信
-・mysqlユーザー, パスワードおよびhostポート番号管理機能
+・openAPIによるclient側の整備基盤作成(openapi.yml)<br>
+・ファイル送受信<br>
+・mysqlユーザー, パスワードおよびhostポート番号管理機能<br>
