@@ -23,6 +23,6 @@
 
 to do<br>
 ・ディレクトリ操作<br>
-・openAPIによるclient側の整備基盤作成(openapi.yml)
-・ファイル送受信
-・mysqlユーザー, パスワードおよびhostポート番号管理機能
+・openAPIによるclient側の整備基盤作成(openapi.yml)<br>
+・ファイル送受信<br>
+・mysqlユーザー, パスワードおよびhostポート番号管理機能<br>
