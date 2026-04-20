@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func pushOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
+func uploadOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
 	duplicateCheck, err := db.Query("SELECT id FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
 	if err != nil {
 		http.Error(w, "Error checking for file information", http.StatusInternalServerError)
@@ -62,11 +62,11 @@ func pushOperation(db *sql.DB, name string, hard string, app string, w http.Resp
 	}
 	userEnv := env.Username
 	var dirpath string = filepath.Join("/", "home", userEnv, "data", hard, app)
-	pushDirOp(dirpath, w)
-	//make directory before pushing file
+	uploadDirOp(dirpath, w)
+	//make directory before uploading file
 }
 
-func pushDirOp(dirpath string, w http.ResponseWriter) {
+func uploadDirOp(dirpath string, w http.ResponseWriter) {
 	if err := os.MkdirAll(dirpath, os.ModePerm); err != nil {
 		http.Error(w, "Error creating directory", http.StatusInternalServerError)
 		return
