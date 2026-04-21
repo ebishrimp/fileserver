@@ -67,7 +67,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uploadOperation(db, name, hard, app, w)
+	UploadOperation(db, name, hard, app, w)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	downloadOperation(db, name, hard, app, w)
+	DownloadOperation(db, name, hard, app, w)
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +112,7 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	overwriteOperation(db, name, hard, app)
+	OverwriteOperation(db, name, hard, app)
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -124,5 +124,5 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Missing parameters"))
 		return
 	}
-	deleteOperation(db, name, hard, app, w)
+	DeleteOperation(db, name, hard, app, w)
 }

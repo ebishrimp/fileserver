@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func deleteOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
+func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
 	selectID, err := db.Query("SELECT id FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
 	if err != nil {
 		http.Error(w, "Error selecting file information", http.StatusInternalServerError)
