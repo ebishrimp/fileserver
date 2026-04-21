@@ -1,5 +1,5 @@
-allowPush true / false
-allowPull true / false
+allowUpload true / false
+allowDownload true / false
 allowOverwrite true / false
 allowDelete true / false
 
