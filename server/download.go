@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func downloadOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
+func DownloadOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
 	pathRow, err := db.Query("SELECT path FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
 	if err != nil {
 		http.Error(w, "Error querying file information", http.StatusInternalServerError)
