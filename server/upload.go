@@ -10,7 +10,7 @@ import (
 )
 
 func UploadOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
-	duplicateCheck, err := db.Query("SELECT id FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
+	duplicateCheck, err := db.Query("SELECT path FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
 	if err != nil {
 		http.Error(w, "Error checking for file information", http.StatusInternalServerError)
 		return
