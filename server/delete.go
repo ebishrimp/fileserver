@@ -53,4 +53,13 @@ func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.Re
 
 func deleteDirOp(path string, w http.ResponseWriter) {
 	err := os.Remove(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Fprintf(w, "File at path %s does not exist, skipping deletion", path)
+		} else {
+			http.Error(w, "Error deleting file at path: "+path+" ,but file exists", http.StatusInternalServerError)
+		}
+	} else {
+		fmt.Fprintf(w, "File at path %s deleted successfully", path)
+	}
 }
