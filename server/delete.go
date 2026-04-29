@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.ResponseWriter) {
@@ -12,8 +13,26 @@ func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.Re
 		http.Error(w, "Error selecting file information", http.StatusInternalServerError)
 		return
 	}
+	selectPath, err := db.Query("SELECT path FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
+	if err != nil {
+		http.Error(w, "Error selecting file path", http.StatusInternalServerError)
+		return
+	}
 	defer selectID.Close()
+	defer selectPath.Close()
 
+	//path operation
+	if selectPath.Next() {
+		var path string
+		err := selectPath.Scan(&path)
+		if err != nil {
+			http.Error(w, "Error scanning path", http.StatusInternalServerError)
+			return
+		}
+		deleteDirOp(path, w, hard, app)
+	}
+
+	//id operation
 	if selectID.Next() {
 		var id int
 		err := selectID.Scan(&id)
@@ -29,5 +48,21 @@ func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.Re
 		fmt.Fprintf(w, "File information with ID: %d deleted successfully", id)
 	} else {
 		http.Error(w, "No file information found for the given parameters", http.StatusNotFound)
+	}
+}
+
+func deleteDirOp(path string, w http.ResponseWriter, hard string, app string) {
+	err := os.Remove(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Fprintf(w, "File at path %s does not exist, skipping deletion", path)
+		} else {
+			http.Error(w, "Error deleting file at path: "+path+" ,but file exists", http.StatusInternalServerError)
+		}
+	} else {
+		fmt.Fprintf(w, "File at path %s deleted successfully", path)
+	}
+	if err := os.Remove("/" + hard + "/" + app); err == nil {
+		fmt.Fprintf(w, "Empty directory at path /%s/%s deleted successfully", hard, app)
 	}
 }
