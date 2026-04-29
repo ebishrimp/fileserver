@@ -1,16 +1,16 @@
-allowUpload yes/no
-allowDownload yes/no
-allowOverwrite yes/no
-allowDelete yes/no
+allowUpload yes
+allowDownload yes
+allowOverwrite yes
+allowDelete yes
 
-whiteList yes/no
+whiteList no
 
 #default data directory is /home/user/data
 #space in directory path is not allowed
-raid0 yes/no
+raid0 no
 raidpath /path/to/dir
 
-mysqlUsername username
-mysqlPassword password
+mysqlUsername fileserver
+mysqlPassword fileserver
 
 ListenPort 50080
