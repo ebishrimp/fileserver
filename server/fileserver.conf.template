@@ -1,12 +1,13 @@
-allowUpload true / false
-allowDownload true / false
-allowOverwrite true / false
-allowDelete true / false
+allowUpload yes/no
+allowDownload yes/no
+allowOverwrite yes/no
+allowDelete yes/no
 
-whiteList true / false
+whiteList yes/no
 
 #default data directory is /home/user/data
-raid0 true / false
+#space in directory path is not allowed
+raid0 yes/no
 raidpath /path/to/dir
 
 mysqlUsername username
