@@ -29,7 +29,7 @@ func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.Re
 			http.Error(w, "Error scanning path", http.StatusInternalServerError)
 			return
 		}
-		deleteDirOp(path, w)
+		deleteDirOp(path, w, hard, app)
 	}
 
 	//id operation
@@ -51,7 +51,7 @@ func DeleteOperation(db *sql.DB, name string, hard string, app string, w http.Re
 	}
 }
 
-func deleteDirOp(path string, w http.ResponseWriter) {
+func deleteDirOp(path string, w http.ResponseWriter, hard string, app string) {
 	err := os.Remove(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -61,5 +61,8 @@ func deleteDirOp(path string, w http.ResponseWriter) {
 		}
 	} else {
 		fmt.Fprintf(w, "File at path %s deleted successfully", path)
+	}
+	if err := os.Remove("/" + hard + "/" + app); err == nil {
+		fmt.Fprintf(w, "Empty directory at path /%s/%s deleted successfully", hard, app)
 	}
 }
