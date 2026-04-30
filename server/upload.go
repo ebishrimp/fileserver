@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/user"
 	"path/filepath"
 )
 
@@ -55,13 +54,7 @@ func UploadOperation(db *sql.DB, name string, hard string, app string, w http.Re
 		fmt.Fprintf(w, "ID: %d", id)
 	}
 
-	env, err := user.Current()
-	if err != nil {
-		http.Error(w, "Error getting host user information", http.StatusInternalServerError)
-		return
-	}
-	userEnv := env.Username
-	var dirpath string = filepath.Join("/", "home", userEnv, "data", hard, app)
+	var dirpath string = filepath.Join("/", "srv", "fileserver", hard, app)
 	uploadDirOp(dirpath, w)
 	//make directory before uploading file
 }
