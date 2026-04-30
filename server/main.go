@@ -156,6 +156,11 @@ func dbConnect() {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -174,6 +179,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -211,6 +221,11 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -229,6 +244,11 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
