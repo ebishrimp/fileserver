@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
@@ -35,6 +36,12 @@ var raidpath string
 
 // log settings
 var logfile string
+
+// IP address and network restrictions in the whitelist
+var whitelistPath string = "/etc/fileserver/whitelist.conf"
+var IPs *confparser.MultiConfig
+var allowedIPs []net.IP
+var allowedSubnets []*net.IPNet
 
 func main() {
 	configParse()
@@ -109,6 +116,28 @@ func configLoad(c *confparser.Config) {
 		}
 	}
 
+}
+
+func IPParse() {
+	if whiteList {
+		f, err := os.Open(whitelistPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		allowIPs, err := confparser.ParseMultipleValues(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+		IPs = allowIPs
+	}
+}
+
+func IPLoad() {
+	if whiteList {
+		//string -> net.IP (convert IP address string to net.IP type) then store in allowedIPs and allowedSubnets (if it's a subnet)
+	}
 }
 
 func dbConnect() {
