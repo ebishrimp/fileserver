@@ -33,6 +33,9 @@ var whiteList bool
 var raid0 bool
 var raidpath string
 
+// log settings
+var logfile string
+
 func main() {
 	configParse()
 	configLoad(conf)
@@ -84,7 +87,28 @@ func configLoad(c *confparser.Config) {
 
 	raid0 = c.GetValue("raid0") == "yes"
 	raidpath = c.GetValue("raidpath")
+	if f, err := os.Stat(raidpath); os.IsNotExist(err) || !f.IsDir() {
+		fmt.Println("RAID 0 path does not exist or is not a directory, disabling RAID 0")
+		raid0 = false
+	}
+
 	whiteList = c.GetValue("whiteList") == "yes"
+	if f, err := os.Stat("/etc/fileserver/whitelist.conf"); os.IsNotExist(err) || f.IsDir() {
+		fmt.Println("White list file does not exist or is a directory, disabling white list")
+		whiteList = false
+	}
+
+	logfile = c.GetValue("logfile")
+	if f, err := os.Stat(logfile); os.IsNotExist(err) || f.IsDir() {
+		fmt.Println("Log file does not exist or is a directory, using default log file: fileserver.log")
+		logfile = "/var/log/fileserver/fileserver.log"
+		os.MkdirAll("/var/log/fileserver", os.ModePerm)
+		_, err := os.Create(logfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 }
 
 func dbConnect() {

@@ -14,3 +14,6 @@ mysqlUsername fileserver
 mysqlPassword fileserver
 
 ListenPort 50080
+
+#default log directory is /var/log/fileserver/fileserver.log
+logfile /var/log/fileserver/fileserver.log
