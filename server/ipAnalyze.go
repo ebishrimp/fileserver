@@ -25,7 +25,32 @@ func GetClientIP(r *http.Request) IPInfo {
 	return ipinfo
 }
 
-func AuthorizeIP(ipinfo IPInfo) bool {
-	//if ip is in the whitelist, return true. when whitelist system is allowed
+func AuthorizeIP(ipinfo IPInfo, w http.ResponseWriter) bool {
+	if !whiteList {
+		return true
+	}
+
+	if ipinfo.data == nil {
+		http.Error(w, "Invalid IP address", http.StatusForbidden)
+		return false
+	}
+	return isIPAllowed(ipinfo.data) || isSubnetAllowed(ipinfo.data)
+}
+
+func isIPAllowed(ip net.IP) bool {
+	for i := 0; i < len(allowedIPs); i++ {
+		if allowedIPs[i].Equal(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func isSubnetAllowed(ip net.IP) bool {
+	for i := 0; i < len(allowedSubnets); i++ {
+		if allowedSubnets[i].Contains(ip) {
+			return true
+		}
+	}
 	return false
 }

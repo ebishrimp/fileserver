@@ -48,6 +48,10 @@ func main() {
 	configLoad(conf)
 	fmt.Println("configs loaded successfully")
 
+	IPParse()
+	IPLoad()
+	fmt.Println("IP whitelist loaded successfully")
+
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/download", downloadHandler)
 	http.HandleFunc("/overwrite", overWriteHandler)
@@ -135,6 +139,7 @@ func IPParse() {
 }
 
 func IPLoad() {
+	// Load allowed IPs and subnets from the whitelist configuration , and store them in the allowedIPs and allowedSubnets slices
 	if whiteList {
 		//address
 		stringAllowedIPs := confparser.GetMultipleValues(IPs, "address")
@@ -181,6 +186,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -201,6 +211,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
 		return
 	}
 
@@ -246,6 +261,11 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -266,6 +286,11 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
 		return
 	}
 
