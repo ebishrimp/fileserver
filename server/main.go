@@ -136,7 +136,27 @@ func IPParse() {
 
 func IPLoad() {
 	if whiteList {
-		//string -> net.IP (convert IP address string to net.IP type) then store in allowedIPs and allowedSubnets (if it's a subnet)
+		//address
+		stringAllowedIPs := confparser.GetMultipleValues(IPs, "address")
+		for i := 0; i < len(stringAllowedIPs); i++ {
+			ip := net.ParseIP(stringAllowedIPs[i])
+			if ip != nil {
+				allowedIPs = append(allowedIPs, ip)
+			} else {
+				fmt.Printf("Invalid IP address in whitelist: %s\n", stringAllowedIPs[i])
+			}
+		}
+
+		//subnet
+		stringAllowedSubnets := confparser.GetMultipleValues(IPs, "subnet")
+		for i := 0; i < len(stringAllowedSubnets); i++ {
+			_, subnet, err := net.ParseCIDR(stringAllowedSubnets[i])
+			if err != nil {
+				fmt.Printf("Invalid subnet in whitelist: %s\n", stringAllowedSubnets[i])
+			} else {
+				allowedSubnets = append(allowedSubnets, subnet)
+			}
+		}
 	}
 }
 
