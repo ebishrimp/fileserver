@@ -142,7 +142,7 @@ func IPLoad() {
 	// Load allowed IPs and subnets from the whitelist configuration , and store them in the allowedIPs and allowedSubnets slices
 	if whiteList {
 		//address
-		stringAllowedIPs := confparser.GetMultipleValues(IPs, "address")
+		stringAllowedIPs := IPs.GetMultipleValues("address")
 		for i := 0; i < len(stringAllowedIPs); i++ {
 			ip := net.ParseIP(stringAllowedIPs[i])
 			if ip != nil {
@@ -153,7 +153,7 @@ func IPLoad() {
 		}
 
 		//subnet
-		stringAllowedSubnets := confparser.GetMultipleValues(IPs, "subnet")
+		stringAllowedSubnets := IPs.GetMultipleValues("subnet")
 		for i := 0; i < len(stringAllowedSubnets); i++ {
 			_, subnet, err := net.ParseCIDR(stringAllowedSubnets[i])
 			if err != nil {
