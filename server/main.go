@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
@@ -33,10 +34,23 @@ var whiteList bool
 var raid0 bool
 var raidpath string
 
+// log settings
+var logfile string
+
+// IP address and network restrictions in the whitelist
+var whitelistPath string = "/etc/fileserver/whitelist.conf"
+var IPs *confparser.MultiConfig
+var allowedIPs []net.IP
+var allowedSubnets []*net.IPNet
+
 func main() {
 	configParse()
 	configLoad(conf)
 	fmt.Println("configs loaded successfully")
+
+	IPParse()
+	IPLoad()
+	fmt.Println("IP whitelist loaded successfully")
 
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/download", downloadHandler)
@@ -84,7 +98,71 @@ func configLoad(c *confparser.Config) {
 
 	raid0 = c.GetValue("raid0") == "yes"
 	raidpath = c.GetValue("raidpath")
+	if f, err := os.Stat(raidpath); os.IsNotExist(err) || !f.IsDir() {
+		fmt.Println("RAID 0 path does not exist or is not a directory, disabling RAID 0")
+		raid0 = false
+	}
+
 	whiteList = c.GetValue("whiteList") == "yes"
+	if f, err := os.Stat("/etc/fileserver/whitelist.conf"); os.IsNotExist(err) || f.IsDir() {
+		fmt.Println("White list file does not exist or is a directory, disabling white list")
+		whiteList = false
+	}
+
+	logfile = c.GetValue("logfile")
+	if f, err := os.Stat(logfile); os.IsNotExist(err) || f.IsDir() {
+		fmt.Println("Log file does not exist or is a directory, using default log file: fileserver.log")
+		logfile = "/var/log/fileserver/fileserver.log"
+		os.MkdirAll("/var/log/fileserver", os.ModePerm)
+		_, err := os.Create(logfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+}
+
+func IPParse() {
+	if whiteList {
+		f, err := os.Open(whitelistPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		allowIPs, err := confparser.ParseMultipleValues(f)
+		if err != nil {
+			log.Fatal(err)
+		}
+		IPs = allowIPs
+	}
+}
+
+func IPLoad() {
+	// Load allowed IPs and subnets from the whitelist configuration , and store them in the allowedIPs and allowedSubnets slices
+	if whiteList {
+		//address
+		stringAllowedIPs := IPs.GetMultipleValues("address")
+		for i := 0; i < len(stringAllowedIPs); i++ {
+			ip := net.ParseIP(stringAllowedIPs[i])
+			if ip != nil {
+				allowedIPs = append(allowedIPs, ip)
+			} else {
+				fmt.Printf("Invalid IP address in whitelist: %s\n", stringAllowedIPs[i])
+			}
+		}
+
+		//subnet
+		stringAllowedSubnets := IPs.GetMultipleValues("subnet")
+		for i := 0; i < len(stringAllowedSubnets); i++ {
+			_, subnet, err := net.ParseCIDR(stringAllowedSubnets[i])
+			if err != nil {
+				fmt.Printf("Invalid subnet in whitelist: %s\n", stringAllowedSubnets[i])
+			} else {
+				allowedSubnets = append(allowedSubnets, subnet)
+			}
+		}
+	}
 }
 
 func dbConnect() {
@@ -103,6 +181,16 @@ func dbConnect() {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -121,6 +209,16 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -158,6 +256,16 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")
@@ -176,6 +284,16 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
+		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
+		return
+	}
+
 	name := r.URL.Query().Get("name")
 	hard := r.URL.Query().Get("hard")
 	app := r.URL.Query().Get("app")

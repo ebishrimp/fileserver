@@ -62,7 +62,7 @@ func deleteDirOp(path string, w http.ResponseWriter, hard string, app string) {
 	} else {
 		fmt.Fprintf(w, "File at path %s deleted successfully", path)
 	}
-	if err := os.Remove("/" + hard + "/" + app); err == nil {
+	if err := os.Remove("/srv/fileserver/" + hard + "/" + app); err == nil {
 		fmt.Fprintf(w, "Empty directory at path /%s/%s deleted successfully", hard, app)
 	}
 }
