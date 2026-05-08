@@ -6,5 +6,7 @@ github.com/ebishrimp/config-file-parser-go v1.0.0 h1:Rz5m+n8DZjgLMzoow8aLq2wrSCY
 github.com/ebishrimp/config-file-parser-go v1.0.0/go.mod h1:nEvwfIwk1cbSuMx7unFneiCLHsD5Qz4p6EzM8lRFZOg=
 github.com/ebishrimp/config-file-parser-go v1.0.1 h1:jtuacOExUM/uYuKrTKbQSb5qdjZd7iQz3VAEeP94eqs=
 github.com/ebishrimp/config-file-parser-go v1.0.1/go.mod h1:nEvwfIwk1cbSuMx7unFneiCLHsD5Qz4p6EzM8lRFZOg=
+github.com/ebishrimp/config-file-parser-go v1.1.0 h1:yVzvXBcGKLQngLU0rzQvCEZbxgOv0bgnGtnTSt3jCgI=
+github.com/ebishrimp/config-file-parser-go v1.1.0/go.mod h1:nEvwfIwk1cbSuMx7unFneiCLHsD5Qz4p6EzM8lRFZOg=
 github.com/go-sql-driver/mysql v1.9.3 h1:U/N249h2WzJ3Ukj8SowVFjdtZKfu9vlLZxjPXV1aweo=
 github.com/go-sql-driver/mysql v1.9.3/go.mod h1:qn46aNg1333BRMNU69Lq93t8du/dwxI64Gl8i5p1WMU=

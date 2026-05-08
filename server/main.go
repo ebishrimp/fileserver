@@ -14,7 +14,7 @@ import (
 )
 
 var db *sql.DB
-var conf *confparser.Config
+var conf *confparser.ConfigurationMap
 var configFilePath string = "./fileserver.conf.template"
 
 // Basic configurations
@@ -39,7 +39,7 @@ var logfile string
 
 // IP address and network restrictions in the whitelist
 var whitelistPath string = "/etc/fileserver/whitelist.conf"
-var IPs *confparser.MultiConfig
+var IPs *confparser.ConfigurationMap
 var allowedIPs []net.IP
 var allowedSubnets []*net.IPNet
 
@@ -48,9 +48,14 @@ func main() {
 	configLoad(conf)
 	fmt.Println("configs loaded successfully")
 
-	IPParse()
-	IPLoad()
-	fmt.Println("IP whitelist loaded successfully")
+	if whiteList {
+		fmt.Println("IP whitelist enabled, loading IP whitelist...")
+		IPParse()
+		IPLoad()
+		fmt.Println("IP whitelist loaded successfully")
+	} else {
+		fmt.Println("IP whitelist disabled")
+	}
 
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/download", downloadHandler)
@@ -78,38 +83,72 @@ func configParse() {
 	}
 	defer f.Close()
 
-	configs, err := confparser.Parse(f)
-	if err != nil {
-		log.Fatal(err)
+	configs, pErr := confparser.ParseConfig(f)
+	if pErr != nil {
+		log.Fatal(pErr)
 	}
 	conf = configs
 }
 
-func configLoad(c *confparser.Config) {
-	ListenPort = c.GetValue("ListenPort")
+func configLoad(c *confparser.ConfigurationMap) {
+	ListenPort = c.String("ListenPort")
 
-	sqlUsername = c.GetValue("mysqlUsername")
-	sqlPassword = c.GetValue("mysqlPassword")
+	sqlUsername = c.String("mysqlUsername")
+	sqlPassword = c.String("mysqlPassword")
 
-	allowUpload = c.GetValue("allowUpload") == "yes"
-	allowDownload = c.GetValue("allowDownload") == "yes"
-	allowOverwrite = c.GetValue("allowOverwrite") == "yes"
-	allowDelete = c.GetValue("allowDelete") == "yes"
+	Up, err := c.Bool("allowUpload")
+	if err != nil {
+		fmt.Println("Error parsing allowUpload, defaulting to false")
+		Up = false
+	}
+	allowUpload = Up
 
-	raid0 = c.GetValue("raid0") == "yes"
-	raidpath = c.GetValue("raidpath")
+	Down, err := c.Bool("allowDownload")
+	if err != nil {
+		fmt.Println("Error parsing allowDownload, defaulting to false")
+		Down = false
+	}
+	allowDownload = Down
+
+	Over, err := c.Bool("allowOverwrite")
+	if err != nil {
+		fmt.Println("Error parsing allowOverwrite, defaulting to false")
+		Over = false
+	}
+	allowOverwrite = Over
+
+	Delete, err := c.Bool("allowDelete")
+	if err != nil {
+		fmt.Println("Error parsing allowDelete, defaulting to false")
+		Delete = false
+	}
+	allowDelete = Delete
+
+	r0, err := c.Bool("raid0")
+	if err != nil {
+		fmt.Println("Error parsing raid0, defaulting to false")
+		r0 = false
+	}
+	raid0 = r0
+	raidpath = c.String("raidpath")
 	if f, err := os.Stat(raidpath); os.IsNotExist(err) || !f.IsDir() {
 		fmt.Println("RAID 0 path does not exist or is not a directory, disabling RAID 0")
 		raid0 = false
 	}
 
-	whiteList = c.GetValue("whiteList") == "yes"
+	wl, err := c.Bool("whiteList")
+	if err != nil {
+		fmt.Println("Error parsing whiteList, defaulting to false")
+		wl = false
+	}
+	whiteList = wl
+
 	if f, err := os.Stat("/etc/fileserver/whitelist.conf"); os.IsNotExist(err) || f.IsDir() {
 		fmt.Println("White list file does not exist or is a directory, disabling white list")
 		whiteList = false
 	}
 
-	logfile = c.GetValue("logfile")
+	logfile = c.String("logfile")
 	if f, err := os.Stat(logfile); os.IsNotExist(err) || f.IsDir() {
 		fmt.Println("Log file does not exist or is a directory, using default log file: fileserver.log")
 		logfile = "/var/log/fileserver/fileserver.log"
@@ -130,9 +169,9 @@ func IPParse() {
 		}
 		defer f.Close()
 
-		allowIPs, err := confparser.ParseMultipleValues(f)
-		if err != nil {
-			log.Fatal(err)
+		allowIPs, pErr := confparser.ParseConfig(f)
+		if pErr != nil {
+			log.Fatal(pErr)
 		}
 		IPs = allowIPs
 	}
@@ -142,7 +181,7 @@ func IPLoad() {
 	// Load allowed IPs and subnets from the whitelist configuration , and store them in the allowedIPs and allowedSubnets slices
 	if whiteList {
 		//address
-		stringAllowedIPs := IPs.GetMultipleValues("address")
+		stringAllowedIPs := IPs.StringSlice("address")
 		for i := 0; i < len(stringAllowedIPs); i++ {
 			ip := net.ParseIP(stringAllowedIPs[i])
 			if ip != nil {
@@ -153,7 +192,7 @@ func IPLoad() {
 		}
 
 		//subnet
-		stringAllowedSubnets := IPs.GetMultipleValues("subnet")
+		stringAllowedSubnets := IPs.StringSlice("subnet")
 		for i := 0; i < len(stringAllowedSubnets); i++ {
 			_, subnet, err := net.ParseCIDR(stringAllowedSubnets[i])
 			if err != nil {
@@ -181,6 +220,11 @@ func dbConnect() {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	if !allowUpload {
+		http.Error(w, "Upload not allowed", http.StatusForbidden)
+		return
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -200,15 +244,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !allowUpload {
-		http.Error(w, "Upload not allowed", http.StatusForbidden)
-		return
-	}
-
 	UploadOperation(db, name, hard, app, w)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	if !allowDownload {
+		http.Error(w, "Download not allowed", http.StatusForbidden)
+		return
+	}
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -256,6 +300,11 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
+	if !allowOverwrite {
+		http.Error(w, "Overwrite not allowed", http.StatusForbidden)
+		return
+	}
+
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -275,15 +324,15 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !allowOverwrite {
-		http.Error(w, "Overwrite not allowed", http.StatusForbidden)
-		return
-	}
-
 	OverwriteOperation(db, name, hard, app)
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	if !allowDelete {
+		http.Error(w, "Delete not allowed", http.StatusForbidden)
+		return
+	}
+
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -300,11 +349,6 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
-		return
-	}
-
-	if !allowDelete {
-		http.Error(w, "Delete not allowed", http.StatusForbidden)
 		return
 	}
 
