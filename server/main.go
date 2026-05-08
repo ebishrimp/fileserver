@@ -130,10 +130,14 @@ func configLoad(c *confparser.ConfigurationMap) {
 		r0 = false
 	}
 	raid0 = r0
-	raidpath = c.String("raidpath")
-	if f, err := os.Stat(raidpath); os.IsNotExist(err) || !f.IsDir() {
-		fmt.Println("RAID 0 path does not exist or is not a directory, disabling RAID 0")
-		raid0 = false
+
+	if raid0 {
+		fmt.Println("RAID 0 enabled, checking RAID 0 path...")
+		raidpath = c.String("raidpath")
+		if f, err := os.Stat(raidpath); os.IsNotExist(err) || !f.IsDir() {
+			fmt.Println("RAID 0 path does not exist or is not a directory, disabling RAID 0")
+			raid0 = false
+		}
 	}
 
 	wl, err := c.Bool("whiteList")

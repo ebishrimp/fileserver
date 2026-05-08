@@ -1,5 +1,12 @@
 package main
 
-func WriteLog(ip string, operation string, path string, err error) {
+type AccessLog struct {
+	IP        string
+	Operation string
+	Path      string
+	Error     error
+}
+
+func WriteLog(log AccessLog) {
 
 }
