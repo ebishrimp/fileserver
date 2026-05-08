@@ -15,7 +15,7 @@ import (
 
 var db *sql.DB
 var conf *confparser.ConfigurationMap
-var configFilePath string = "./fileserver.conf.template"
+var configFilePath string = "/etc/fileserver/fileserver.conf"
 
 // Basic configurations
 var ListenPort string
