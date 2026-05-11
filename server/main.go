@@ -30,8 +30,8 @@ var allowDelete bool
 
 var whiteList bool
 
-// pseudo raid 0 settings
-var raid0 bool
+// pseudo raid 1 settings
+var raid1 bool
 var raidpath string
 
 // log settings
@@ -42,6 +42,7 @@ var whitelistPath string = "/etc/fileserver/whitelist.conf"
 var IPs *confparser.ConfigurationMap
 var allowedIPs []net.IP
 var allowedSubnets []*net.IPNet
+var domain []string
 
 func main() {
 	configParse()
@@ -124,19 +125,19 @@ func configLoad(c *confparser.ConfigurationMap) {
 	}
 	allowDelete = Delete
 
-	r0, err := c.Bool("raid0")
+	r1, err := c.Bool("raid1")
 	if err != nil {
-		fmt.Println("Error parsing raid0, defaulting to false")
-		r0 = false
+		fmt.Println("Error parsing raid1, defaulting to false")
+		r1 = false
 	}
-	raid0 = r0
+	raid1 = r1
 
-	if raid0 {
-		fmt.Println("RAID 0 enabled, checking RAID 0 path...")
+	if raid1 {
+		fmt.Println("pseudo RAID 1 enabled, checking RAID 1 path...")
 		raidpath = c.String("raidpath")
 		if f, err := os.Stat(raidpath); os.IsNotExist(err) || !f.IsDir() {
-			fmt.Println("RAID 0 path does not exist or is not a directory, disabling RAID 0")
-			raid0 = false
+			fmt.Println("RAID 1 path does not exist or is not a directory, disabling pseudo RAID 1")
+			raid1 = false
 		}
 	}
 
@@ -205,6 +206,14 @@ func IPLoad() {
 				allowedSubnets = append(allowedSubnets, subnet)
 			}
 		}
+
+		//domain
+		domain = IPs.StringSlice("domain")
+		solved, err := NamesSolve(domain)
+		if err != nil {
+			fmt.Printf("Error resolving domain names: %v\n", err)
+		}
+		allowedIPs = append(allowedIPs, solved...)
 	}
 }
 
@@ -229,7 +238,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}

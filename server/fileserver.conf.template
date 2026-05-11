@@ -7,7 +7,7 @@ whiteList no
 
 #default data directory is /home/user/data
 #space in directory path is not allowed
-raid0 no
+pseudoraid1 no
 raidpath /path/to/dir
 
 mysqlUsername fileserver

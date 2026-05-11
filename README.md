@@ -3,7 +3,7 @@
 - host(server) 側のディレクトリ・ファイル管理
 - client 側からのファイル操作リクエスト
 - 各言語対応のライブラリおよびシェル用コマンド
-- 疑似 raid 0 対応
+- 疑似 raid 1 (ミラーリング) 対応
 - prometheus exporter 対応
 - *LAN内運用を想定
 
@@ -31,7 +31,7 @@ to do<br>
 ・ファイル送受信<br>
 ・mysqlユーザー, パスワードおよびhostポート番号管理機能<br>
 ・delete時 ID scanエラー<br>
-・疑似 raid 0 有効の場合push/overwriteにより2つのディレクトリに書き込む<br>
+・疑似 raid 1 有効の場合push/overwriteにより2つのディレクトリに書き込む<br>
 ・送信前にtar.gz圧縮を実行<br>
 ・whitelist有効時クライアントIPアドレスの照合<br>
 ・クライアントIPアドレスおよび処理内容をログファイルに書き込み<br>

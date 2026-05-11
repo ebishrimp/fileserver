@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 )
@@ -53,4 +54,23 @@ func isSubnetAllowed(ip net.IP) bool {
 		}
 	}
 	return false
+}
+
+func NamesSolve(domain []string) ([]net.IP, error) {
+	var ips []net.IP
+
+	if len(domain) == 0 {
+		return nil, fmt.Errorf("Domain is empty")
+	}
+	for i := 0; i < len(domain); i++ {
+		if domain[i] == "" {
+			return nil, fmt.Errorf("Domain contains empty string")
+		}
+		ip, err := net.LookupIP(domain[i])
+		if err != nil {
+			return nil, err
+		}
+		ips = append(ips, ip...)
+	}
+	return ips, nil
 }
