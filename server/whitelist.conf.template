@@ -3,3 +3,6 @@ adderss 192.168.10.30
 
 subnet 192.168.20.0/24
 subnet 192.168.30.0/24
+
+domain name.domain
+domain 1.name.domain

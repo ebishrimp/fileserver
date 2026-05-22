@@ -7,7 +7,7 @@ whiteList no
 
 #default data directory is /home/user/data
 #space in directory path is not allowed
-raid0 no
+pseudoraid1 no
 raidpath /path/to/dir
 
 mysqlUsername fileserver
@@ -17,3 +17,10 @@ ListenPort 50080
 
 #default log directory is /var/log/fileserver/fileserver.log
 logfile /var/log/fileserver/fileserver.log
+
+#If logfile size is more than the value (Byte), compress and create new one.
+#default value is 10MByte
+maxlogfilesize 10000000
+
+#default log level is error. 
+loglevel error
