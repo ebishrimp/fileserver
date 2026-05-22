@@ -24,14 +24,22 @@
 - /delete?params=values 削除
 - /overwrite?params=values 上書き
 - *無効なパスおよびパラメーターに対しhttpエラーを出力
+- http method ... get, put, delete
 
 to do<br>
-・ディレクトリ操作<br>
 ・openAPIによるclient側の整備基盤作成(openapi.yml)<br>
 ・ファイル送受信<br>
 ・mysqlユーザー, パスワードおよびhostポート番号管理機能<br>
 ・delete時 ID scanエラー<br>
 ・疑似 raid 1 有効の場合push/overwriteにより2つのディレクトリに書き込む<br>
 ・送信前にtar.gz圧縮を実行<br>
-・whitelist有効時クライアントIPアドレスの照合<br>
+・whitelist有効時クライアントIPアドレスの照合 (現時点で脆弱性あり)<br>
 ・クライアントIPアドレスおよび処理内容をログファイルに書き込み<br>
+<br>
+to do (later)<br>
+・https対応<br>
+・APIキー認証実装<br>
+・管理レイヤーごとのアクセス規制<br>
+<br>
+DONE<br>
+・ディレクトリ操作<br>
