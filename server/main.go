@@ -36,6 +36,7 @@ var raidpath string
 
 // log settings
 var logfile string
+var maxlogfilesize int
 
 // IP address and network restrictions in the whitelist
 var whitelistPath string = "/etc/fileserver/whitelist.conf"
@@ -84,9 +85,9 @@ func configParse() {
 	}
 	defer f.Close()
 
-	configs, pErr := confparser.ParseConfig(f)
-	if pErr != nil {
-		log.Fatal(pErr)
+	configs, err := confparser.ParseConfig(f)
+	if err != nil {
+		log.Fatal(err)
 	}
 	conf = configs
 }
@@ -162,6 +163,12 @@ func configLoad(c *confparser.ConfigurationMap) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	maxlogfilesize, err = c.Int("maxlogfilesize")
+	if err != nil {
+		fmt.Println("Error parsing maxlogfilesize, defaulting to 10MB")
+		maxlogfilesize = 10000000
 	}
 
 }
