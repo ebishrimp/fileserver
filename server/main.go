@@ -126,7 +126,7 @@ func configLoad(c *confparser.ConfigurationMap) {
 	}
 	allowDelete = Delete
 
-	r1, err := c.Bool("raid1")
+	r1, err := c.Bool("pseudoraid1")
 	if err != nil {
 		fmt.Println("Error parsing raid1, defaulting to false")
 		r1 = false
