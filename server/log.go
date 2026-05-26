@@ -44,7 +44,7 @@ func (logstat *AccessLog) WriteLog(path string) {
 	} else {
 		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			fmt.Printf("failed to open the logfile. path: %s, err: %w\n", path, err)
+			fmt.Printf("failed to open the logfile. path: %s, err: "+err.Error()+"\n", path, err)
 		}
 		log = f
 	}
