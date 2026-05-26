@@ -14,7 +14,6 @@ type AccessLog struct {
 	IP        string
 	Operation string
 	Path      string
-	Error     error
 }
 
 func (logstat *AccessLog) WriteLog(path string) {
@@ -54,13 +53,7 @@ func (logstat *AccessLog) WriteLog(path string) {
 	writer := bufio.NewWriter(log)
 	currentTime := time.Now().Format("2006-01-02T15:05:04")
 
-	var errcontent string
-	if logstat.Error == nil {
-		errcontent = "No error"
-	} else {
-		errcontent = logstat.Error.Error()
-	}
-	logContent := fmt.Sprintf("[%s] Client: %s, Operation: %s, Path: %s, Error: %s\n", currentTime, logstat.IP, logstat.Operation, logstat.Path, errcontent)
+	logContent := fmt.Sprintf("[%s] Client: %s, Operation: %s, Path: %s\n", currentTime, logstat.IP, logstat.Operation, logstat.Path)
 
 	_, err := writer.WriteString(logContent)
 	if err != nil {
