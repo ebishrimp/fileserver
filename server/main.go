@@ -126,7 +126,7 @@ func configLoad(c *confparser.ConfigurationMap) {
 	}
 	allowDelete = Delete
 
-	r1, err := c.Bool("raid1")
+	r1, err := c.Bool("pseudoraid1")
 	if err != nil {
 		fmt.Println("Error parsing raid1, defaulting to false")
 		r1 = false
@@ -240,6 +240,7 @@ func dbConnect() {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	var clientIP string
 	if !allowUpload {
 		http.Error(w, "Upload not allowed", http.StatusForbidden)
 		return
@@ -253,6 +254,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
 		return
+	} else {
+		clientIP = ipInfo.address
 	}
 
 	name := r.URL.Query().Get("name")
@@ -265,9 +268,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	UploadOperation(db, name, hard, app, w)
+	logstat := AccessLog{clientIP, "Upload", makepath(hard, app, name)}
+	logstat.WriteLog(logfile)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	var clientIP string
+
 	if !allowDownload {
 		http.Error(w, "Download not allowed", http.StatusForbidden)
 		return
@@ -281,6 +288,8 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
 		return
+	} else {
+		clientIP = ipInfo.address
 	}
 
 	name := r.URL.Query().Get("name")
@@ -317,9 +326,13 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	DownloadOperation(db, name, hard, app, w)
+	logstat := AccessLog{clientIP, "Download", makepath(hard, app, name)}
+	logstat.WriteLog(logfile)
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
+	var clientIP string
+
 	if !allowOverwrite {
 		http.Error(w, "Overwrite not allowed", http.StatusForbidden)
 		return
@@ -345,9 +358,13 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	OverwriteOperation(db, name, hard, app)
+	logstat := AccessLog{clientIP, "Overwrite", makepath(hard, app, name)}
+	logstat.WriteLog(logfile)
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	var clientIP string
+
 	if !allowDelete {
 		http.Error(w, "Delete not allowed", http.StatusForbidden)
 		return
@@ -373,4 +390,6 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	DeleteOperation(db, name, hard, app, w)
+	logstat := AccessLog{clientIP, "Delete", makepath(hard, app, name)}
+	logstat.WriteLog(logfile)
 }

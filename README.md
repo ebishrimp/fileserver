@@ -32,7 +32,7 @@ to do<br>
 ・mysqlユーザー, パスワードおよびhostポート番号管理機能<br>
 ・delete時 ID scanエラー<br>
 ・疑似 raid 1 有効の場合push/overwriteにより2つのディレクトリに書き込む<br>
-・送信前にtar.gz圧縮を実行<br>
+・送信時にtar.gz圧縮を実行<br>
 ・whitelist有効時クライアントIPアドレスの照合 (現時点で脆弱性あり)<br>
 ・クライアントIPアドレスおよび処理内容をログファイルに書き込み<br>
 <br>
