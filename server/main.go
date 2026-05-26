@@ -363,6 +363,8 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	var clientIP string
+
 	if !allowDelete {
 		http.Error(w, "Delete not allowed", http.StatusForbidden)
 		return
@@ -388,4 +390,6 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	DeleteOperation(db, name, hard, app, w)
+	logstat := AccessLog{clientIP, "Delete", makepath(hard, app, name)}
+	logstat.WriteLog(logfile)
 }
