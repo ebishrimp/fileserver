@@ -40,12 +40,14 @@ func (logstat *AccessLog) WriteLog(path string) {
 		if err != nil {
 			fmt.Printf("failed to open the logfile. path: %s\n", path)
 		}
+		defer f.Close()
 		log = f
 	} else {
 		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			fmt.Printf("failed to open the logfile. path: %s, err: "+err.Error()+"\n", path, err)
 		}
+		defer f.Close()
 		log = f
 	}
 	defer log.Close()
@@ -60,7 +62,10 @@ func (logstat *AccessLog) WriteLog(path string) {
 		fmt.Println("failed to write log: %w", err)
 		return
 	}
-
+	if err := writer.Flush(); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(logContent)
 }
 
 func fileSizeLarge(path string) bool {
