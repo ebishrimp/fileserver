@@ -34,10 +34,13 @@ func (logstat *AccessLog) WriteLog(path string) {
 			}
 		}
 		//write log to compressPath
-		err := compressLog(compressPath, path)
-		if err != nil {
-			fmt.Printf("failed to compress logfile: %s\n, err: %s", compressPath, err)
-		}
+		go func() {
+			err := compressLog(compressPath, path)
+			if err != nil {
+				fmt.Printf("failed to compress logfile: %s\n, err: %s", compressPath, err)
+			}
+		}()
+
 		f, err := os.Create(path)
 		if err != nil {
 			fmt.Printf("failed to open the logfile. path: %s\n", path)
