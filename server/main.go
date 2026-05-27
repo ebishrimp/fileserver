@@ -240,21 +240,25 @@ func dbConnect() {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	pass := true
 	var clientIP string
+	var logstat AccessLog
 	if !allowUpload {
 		http.Error(w, "Upload not allowed", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = fmt.Errorf("Upload not allowed")
 	}
 
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
+		pass = false
+		logstat.Error = fmt.Errorf("Invalid request method")
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
-		return
-	} else {
+		pass = false
+		logstat.Error = fmt.Errorf("IP address is not allowed to access")
 		clientIP = ipInfo.address
 	}
 
@@ -264,11 +268,19 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
-		return
+		pass = false
+		logstat.Error = fmt.Errorf("Missing parameters")
 	}
 
-	UploadOperation(db, name, hard, app, w)
-	logstat := AccessLog{clientIP, "Upload", makepath(hard, app, name)}
+	if !pass {
+		logstat.IP = clientIP
+		logstat.Operation = "Upload"
+		logstat.Path = makepath(hard, app, name)
+		logstat.WriteLog(logfile)
+	}
+
+	err := UploadOperation(db, name, hard, app, w)
+	logstat = AccessLog{clientIP, "Upload", makepath(hard, app, name), err}
 	logstat.WriteLog(logfile)
 }
 

@@ -14,11 +14,13 @@ type AccessLog struct {
 	IP        string
 	Operation string
 	Path      string
+	Error     error
 }
 
 func (logstat *AccessLog) WriteLog(path string) {
 	var compressPath string
 	var log *os.File
+	var errstr string
 
 	if fileSizeLarge(path) {
 		idx := 1
@@ -55,7 +57,13 @@ func (logstat *AccessLog) WriteLog(path string) {
 	writer := bufio.NewWriter(log)
 	currentTime := time.Now().Format("2006-01-02T15:05:04")
 
-	logContent := fmt.Sprintf("[%s] Client: %s, Operation: %s, Path: %s\n", currentTime, logstat.IP, logstat.Operation, logstat.Path)
+	if logstat.Error != nil {
+		errstr = logstat.Error.Error()
+	} else {
+		errstr = "success"
+	}
+
+	logContent := fmt.Sprintf("[%s] Client: %s, Operation: %s, Path: %s, Status: %s\n", currentTime, logstat.IP, logstat.Operation, logstat.Path, errstr)
 
 	_, err := writer.WriteString(logContent)
 	if err != nil {
