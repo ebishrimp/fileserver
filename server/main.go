@@ -253,7 +253,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		pass = false
-		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method"))
+		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method: "+r.Method))
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
@@ -299,7 +299,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		pass = false
-		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method"))
+		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method: "+r.Method))
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
@@ -355,21 +355,27 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func overWriteHandler(w http.ResponseWriter, r *http.Request) {
+	pass := true
 	var clientIP string
+	var logstat AccessLog
 
 	if !allowOverwrite {
 		http.Error(w, "Overwrite not allowed", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Overwrite not allowed"))
 	}
 
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method: "+r.Method))
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("IP address is not allowed to access"))
+		clientIP = ipInfo.address
 	}
 
 	name := r.URL.Query().Get("name")
@@ -378,30 +384,43 @@ func overWriteHandler(w http.ResponseWriter, r *http.Request) {
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Missing parameters"))
 	}
 
-	OverwriteOperation(db, name, hard, app)
-	logstat := AccessLog{clientIP, "Overwrite", makepath(hard, app, name)}
+	if !pass {
+		logstat.IP = clientIP
+		logstat.Operation = "Overwrite"
+		logstat.Path = makepath(hard, app, name)
+		logstat.WriteLog(logfile)
+	}
+
+	err := OverwriteOperation(db, name, hard, app)
+	logstat = AccessLog{clientIP, "Overwrite", makepath(hard, app, name), errors.Join(logstat.Error, err)}
 	logstat.WriteLog(logfile)
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	pass := true
 	var clientIP string
+	var logstat AccessLog
 
 	if !allowDelete {
 		http.Error(w, "Delete not allowed", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Delete not allowed"))
 	}
 
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method: "+r.Method))
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("IP address is not allowed to access"))
 	}
 
 	name := r.URL.Query().Get("name")
@@ -410,10 +429,18 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Missing parameters"))
 	}
 
-	DeleteOperation(db, name, hard, app, w)
-	logstat := AccessLog{clientIP, "Delete", makepath(hard, app, name)}
+	if !pass {
+		logstat.IP = clientIP
+		logstat.Operation = "Delete"
+		logstat.Path = makepath(hard, app, name)
+		logstat.WriteLog(logfile)
+	}
+
+	err := DeleteOperation(db, name, hard, app, w)
+	logstat = AccessLog{clientIP, "Delete", makepath(hard, app, name), errors.Join(logstat.Error, err)}
 	logstat.WriteLog(logfile)
 }
