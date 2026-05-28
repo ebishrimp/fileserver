@@ -23,4 +23,4 @@ logfile /var/log/fileserver/fileserver.log
 maxlogfilesize 10000000
 
 #default log level is error. 
-loglevel error
+#loglevel error

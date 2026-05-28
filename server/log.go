@@ -14,31 +14,37 @@ type AccessLog struct {
 	IP        string
 	Operation string
 	Path      string
+	Error     error
 }
 
 func (logstat *AccessLog) WriteLog(path string) {
 	var compressPath string
 	var log *os.File
+	var errstr string
 
 	if fileSizeLarge(path) {
+		temppath := path + "." + time.Now().Format("2006-01-02")
 		idx := 1
 		exists := true
 		for exists {
-			if f, err := os.Stat(path + "." + strconv.Itoa(idx)); os.IsNotExist(err) || f.IsDir() {
+			if f, err := os.Stat(temppath + "." + strconv.Itoa(idx)); os.IsNotExist(err) || f.IsDir() {
 				exists = false
-				compressPath = path + "." + strconv.Itoa(idx) + ".gz"
+				compressPath = temppath + "." + strconv.Itoa(idx) + ".gz"
 			} else {
 				idx++
 			}
 		}
 		//write log to compressPath
-		err := compressLog(compressPath, path)
-		if err != nil {
-			fmt.Printf("failed to compress logfile: %s\n, err: %s", compressPath, err)
-		}
+		go func() {
+			err := compressLog(compressPath, path)
+			if err != nil {
+				fmt.Printf("failed to compress logfile: %s\n, err: %s", compressPath, err)
+			}
+		}()
+
 		f, err := os.Create(path)
 		if err != nil {
-			fmt.Printf("failed to open the logfile. path: %s\n", path)
+			fmt.Printf("failed to open the logfile. path: %s\n", temppath)
 		}
 		defer f.Close()
 		log = f
@@ -55,7 +61,13 @@ func (logstat *AccessLog) WriteLog(path string) {
 	writer := bufio.NewWriter(log)
 	currentTime := time.Now().Format("2006-01-02T15:05:04")
 
-	logContent := fmt.Sprintf("[%s] Client: %s, Operation: %s, Path: %s\n", currentTime, logstat.IP, logstat.Operation, logstat.Path)
+	if logstat.Error != nil {
+		errstr = logstat.Error.Error()
+	} else {
+		errstr = "success"
+	}
+
+	logContent := fmt.Sprintf("[%s] Client: %s, Operation: %s, Path: %s, Status: %s\n", currentTime, logstat.IP, logstat.Operation, logstat.Path, errstr)
 
 	_, err := writer.WriteString(logContent)
 	if err != nil {
