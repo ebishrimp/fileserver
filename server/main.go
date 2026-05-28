@@ -306,7 +306,6 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
 		pass = false
 		logstat.Error = errors.Join(logstat.Error, errors.New("IP address is not allowed to access"))
-	} else {
 		clientIP = ipInfo.address
 	}
 
