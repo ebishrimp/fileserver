@@ -23,12 +23,13 @@ func (logstat *AccessLog) WriteLog(path string) {
 	var errstr string
 
 	if fileSizeLarge(path) {
+		temppath := path + "." + time.Now().Format("2006-01-02")
 		idx := 1
 		exists := true
 		for exists {
-			if f, err := os.Stat(path + "." + strconv.Itoa(idx)); os.IsNotExist(err) || f.IsDir() {
+			if f, err := os.Stat(temppath + "." + strconv.Itoa(idx)); os.IsNotExist(err) || f.IsDir() {
 				exists = false
-				compressPath = path + "." + strconv.Itoa(idx) + ".gz"
+				compressPath = temppath + "." + strconv.Itoa(idx) + ".gz"
 			} else {
 				idx++
 			}
@@ -43,7 +44,7 @@ func (logstat *AccessLog) WriteLog(path string) {
 
 		f, err := os.Create(path)
 		if err != nil {
-			fmt.Printf("failed to open the logfile. path: %s\n", path)
+			fmt.Printf("failed to open the logfile. path: %s\n", temppath)
 		}
 		defer f.Close()
 		log = f
