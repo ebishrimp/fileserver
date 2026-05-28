@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -246,19 +247,19 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if !allowUpload {
 		http.Error(w, "Upload not allowed", http.StatusForbidden)
 		pass = false
-		logstat.Error = fmt.Errorf("Upload not allowed")
+		logstat.Error = errors.Join(logstat.Error, errors.New("Upload not allowed"))
 	}
 
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		pass = false
-		logstat.Error = fmt.Errorf("Invalid request method")
+		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method"))
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
 		pass = false
-		logstat.Error = fmt.Errorf("IP address is not allowed to access")
+		logstat.Error = errors.Join(logstat.Error, errors.New("IP address is not allowed to access"))
 		clientIP = ipInfo.address
 	}
 
@@ -269,7 +270,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
 		pass = false
-		logstat.Error = fmt.Errorf("Missing parameters")
+		logstat.Error = errors.Join(logstat.Error, errors.New("Missing parameters"))
 	}
 
 	if !pass {
@@ -280,26 +281,31 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := UploadOperation(db, name, hard, app, w)
-	logstat = AccessLog{clientIP, "Upload", makepath(hard, app, name), err}
+	logstat = AccessLog{clientIP, "Upload", makepath(hard, app, name), errors.Join(logstat.Error, err)}
 	logstat.WriteLog(logfile)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	pass := true
 	var clientIP string
+	var logstat AccessLog
 
 	if !allowDownload {
 		http.Error(w, "Download not allowed", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Download not allowed"))
 	}
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Invalid request method"))
 	}
 
 	if ipInfo := GetClientIP(r); !AuthorizeIP(ipInfo, w) {
 		http.Error(w, "Your IP address is not allowed to access", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("IP address is not allowed to access"))
 	} else {
 		clientIP = ipInfo.address
 	}
@@ -310,18 +316,15 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if name == "" || hard == "" || app == "" {
 		w.Write([]byte("Missing parameters"))
-		return
-	}
-
-	if !allowDownload {
-		http.Error(w, "Download not allowed", http.StatusForbidden)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Missing parameters"))
 	}
 
 	rows, err := db.Query("SELECT path FROM filepath WHERE filename = ? AND hardlayer = ? AND applayer = ?", name, hard, app)
 	if err != nil {
 		http.Error(w, "Error querying file information", http.StatusInternalServerError)
-		return
+		pass = false
+		logstat.Error = errors.Join(logstat.Error, errors.New("Error querying file information"))
 	}
 	defer rows.Close()
 
@@ -330,15 +333,25 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		err := rows.Scan(&path)
 		if err != nil {
 			http.Error(w, "Error scanning path", http.StatusInternalServerError)
-			return
+			pass = false
+			logstat.Error = errors.Join(logstat.Error, errors.New("Error scanning path"))
 		}
 		if path == "" {
 			http.Error(w, "No file information found for the given parameters", http.StatusNotFound)
-			return
+			pass = false
+			logstat.Error = errors.Join(logstat.Error, errors.New("No file information found for the given parameters"))
 		}
 	}
-	DownloadOperation(db, name, hard, app, w)
-	logstat := AccessLog{clientIP, "Download", makepath(hard, app, name)}
+
+	if !pass {
+		logstat.IP = clientIP
+		logstat.Operation = "Download"
+		logstat.Path = makepath(hard, app, name)
+		logstat.WriteLog(logfile)
+	}
+
+	err = DownloadOperation(db, name, hard, app, w)
+	logstat = AccessLog{clientIP, "Download", makepath(hard, app, name), errors.Join(logstat.Error, err)}
 	logstat.WriteLog(logfile)
 }
 
