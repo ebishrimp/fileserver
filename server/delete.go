@@ -64,7 +64,8 @@ func deleteDirOp(path string, w http.ResponseWriter, hard string, app string) er
 			return fmt.Errorf("File at path %s does not exist, skipping deletion", path)
 		} else {
 			http.Error(w, "Error deleting file at path: "+path+" ,but file exists", http.StatusInternalServerError)
-			return fmt.Errorf("Error deleting file at path: " + path + " ,but file exists")
+			errmsg := fmt.Sprintf("Error deleting file at path: %s ,but file exists", path)
+			return fmt.Errorf("%s", errmsg)
 		}
 	} else {
 		fmt.Fprintf(w, "File at path %s deleted successfully", path)
